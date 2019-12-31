@@ -286,7 +286,17 @@ namespace CronTime
 							return;
 						}
 						assert(dwNum1 < dwNum2);
+						if (dwNum1 >= dwNum2)
+						{
+							m_bIsValid = false;
+							return;
+						}
 						assert(dwNum2 < refBitSet.GetCount());
+						if (dwNum2 >= refBitSet.GetCount())
+						{
+							m_bIsValid = false;
+							return;
+						}
 						for (unsigned int i = dwNum1; i <= dwNum2; ++i)
 						{
 							refBitSet.SetBit(i, true);
@@ -302,6 +312,11 @@ namespace CronTime
 							return;
 						}
 						assert(dwNum < refBitSet.GetCount());
+						if (dwNum >= refBitSet.GetCount())
+						{
+							m_bIsValid = false;
+							return;
+						}
 						refBitSet.SetBit(dwNum, true);
 					}
 				}
