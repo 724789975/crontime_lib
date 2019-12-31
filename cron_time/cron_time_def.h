@@ -62,6 +62,7 @@ namespace CronTime
 	public:
 		Timer(const char* szCronStr, unsigned int dwLen)
 		{
+			m_bIsValid = true;
 			const char* szTemp1 = szCronStr;
 			//秒
 			//TODO
@@ -106,6 +107,31 @@ namespace CronTime
 			//天 / 周
 			_Parse(m_oDow, szTemp1, szCronStr - szTemp1);
 			szTemp1 = ++szCronStr;
+
+			if (m_bIsValid)
+			{
+				//如果 周天数跟月天数 都存在不满的情况 那么就是无效的
+				bool bWValid = true;
+				for (unsigned int i = 0; i < m_oDow.GetCount(); ++i)
+				{
+					if (!m_oDow.GetBit(i))
+					{
+						bWValid = false;
+						break;
+					}
+				}
+
+				bool bMValid = true;
+				for (unsigned int i = 0; i < m_oDom.GetCount(); ++i)
+				{
+					if (!m_oDom.GetBit(i))
+					{
+						bMValid = false;
+						break;
+					}
+				}
+				m_bIsValid = bWValid && bMValid;
+			}
 		}
 
 		void DumpInfo(std::ostream& refStream)
@@ -139,8 +165,15 @@ namespace CronTime
 				if (!_GetNumber(szTemp, dwNum2))
 				{
 					assert(0);
+					m_bIsValid = false;
+					return;
 				}
 				assert(dwNum2 < refBitSet.GetCount());
+				if (dwNum2 >= refBitSet.GetCount())
+				{
+					m_bIsValid = false;
+					return;
+				}
 
 				//是不是有'-'分割
 				bool bSplit2 = false;
@@ -162,13 +195,27 @@ namespace CronTime
 					if (!_GetNumber(szCron, dwNum_1))
 					{
 						assert(0);
+						m_bIsValid = false;
+						return;
 					}
 					if (!_GetNumber(szTemp1, dwNum_2))
 					{
 						assert(0);
+						m_bIsValid = false;
+						return;
 					}
 					assert(dwNum_1 < dwNum_2);
+					if (dwNum_2 >= dwNum_1)
+					{
+						m_bIsValid = false;
+						return;
+					}
 					assert(dwNum_2 < refBitSet.GetCount());
+					if (dwNum_2 >= refBitSet.GetCount())
+					{
+						m_bIsValid = false;
+						return;
+					}
 				}
 				else
 				{
@@ -181,8 +228,15 @@ namespace CronTime
 						if (!_GetNumber(szCron, dwNum_1))
 						{
 							assert(0);
+							m_bIsValid = false;
+							return;
 						}
 						assert(dwNum_1 < refBitSet.GetCount());
+						if (dwNum_1 >= refBitSet.GetCount())
+						{
+							m_bIsValid = false;
+							return;
+						}
 					}
 				}
 				for (unsigned int i = dwNum_1; i <= dwNum_2; i += dwNum2)
@@ -221,11 +275,15 @@ namespace CronTime
 						if (!_GetNumber(szCron, dwNum1))
 						{
 							assert(0);
+							m_bIsValid = false;
+							return;
 						}
 						unsigned int dwNum2 = 0;
 						if (!_GetNumber(szTemp, dwNum2))
 						{
 							assert(0);
+							m_bIsValid = false;
+							return;
 						}
 						assert(dwNum1 < dwNum2);
 						assert(dwNum2 < refBitSet.GetCount());
@@ -240,6 +298,8 @@ namespace CronTime
 						if (!_GetNumber(szCron, dwNum))
 						{
 							assert(0);
+							m_bIsValid = false;
+							return;
 						}
 						assert(dwNum < refBitSet.GetCount());
 						refBitSet.SetBit(dwNum, true);
@@ -261,11 +321,18 @@ namespace CronTime
 			return bRet;
 		}
 
+		bool _MatchDay(const tm& refTM)
+		{
+			return m_oDow.GetBit(refTM.tm_mday - 1) || m_oDom.GetBit(refTM.tm_wday);
+		}
+
 		EMinuteBitSet m_oMinute;
 		EHourBitSet m_oHour;
 		EDomBitSet m_oDom;
 		EMonthBitSet m_oMonth;
 		EDowBitSet m_oDow;
+
+		bool m_bIsValid;
 	};
 }
 
