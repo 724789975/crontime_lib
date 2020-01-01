@@ -4,6 +4,33 @@
 #include "meta_header/t_bit_set.h"
 #include <stdexcept>
 #include <assert.h>
+#include <stdio.h>
+#include <time.h>
+
+/***********************************************************************
+*	*	*	*	*	*
+-	-	-	-	-	-
+|	|	|	|	|	|
+|	|	|	|	|	+----- 星期中星期几 (0 - 6) (星期天 为0)
+|	|	|	|	+---------- 月份 (1 - 12)
+|	|	|	+--------------- 一个月中的第几天 (1 - 31)
+|	|	+-------------------- 小时 (0 - 23)
+|	+------------------------- 分钟 (0 - 59)
++------------------------------ 秒 (0 - 59)
+
+0 * * * * *
+每月每天每小时的第 0 秒执行一次
+
+0 0 6-12/3 * 12 *
+在 12 月内, 每天的早上 6 点到 12 点，每隔 3 个小时 0 分钟执行一次
+
+0 0 17 * * 1-5
+周一到周五每天下午 5:00
+
+0 20 0-23/2 * * *
+每月每天的午夜 0 点 20 分, 2 点 20 分, 4 点 20 分....执行
+
+***********************************************************************/
 
 #define	SECONDS_PER_MINUTE	60
 #define	SECONDS_PER_HOUR	3600
@@ -29,8 +56,20 @@
 #define	LAST_DOW	7
 #define	DOW_COUNT	(LAST_DOW - FIRST_DOW + 1)
 
+#ifdef WIN32
+#define LOCALTIME(p_tt, p_tm) localtime_s(p_tm, p_tt)
+#else
+#define LOCALTIME(p_tt, p_tm) localtime_r(p_tt, p_tm)
+#endif // WIN32
+
+
 namespace CronTime
 {
+	BeginEnumBitSet(ESecond)
+	{
+		EndEnumBitSetWithCount(ESecond, SECONDS_PER_MINUTE)
+	};
+	EnumBitSet(ESecond);
 	BeginEnumBitSet(EMinute)
 	{
 		EndEnumBitSetWithCount(EMinute, MINUTE_COUNT)
@@ -64,8 +103,15 @@ namespace CronTime
 		{
 			m_bIsValid = true;
 			const char* szTemp1 = szCronStr;
+			//
+			while (*szCronStr != ' ' && *szCronStr != '\0' && dwLen > 0)
+			{
+				++szCronStr;
+				--dwLen;
+			}
 			//秒
-			//TODO
+			_Parse(m_oSecond, szTemp1, szCronStr - szTemp1);
+			szTemp1 = ++szCronStr;
 
 			while (*szCronStr != ' ' && *szCronStr != '\0' && dwLen > 0)
 			{
@@ -89,7 +135,7 @@ namespace CronTime
 				++szCronStr;
 			}
 			//天 / 月
-			_Parse(m_oDom, szTemp1, szCronStr - szTemp1);
+			_Parse(m_oDom, szTemp1, szCronStr - szTemp1, 1);
 			szTemp1 = ++szCronStr;
 
 			while (*szCronStr != ' ' && *szCronStr != '\0' && dwLen > 0)
@@ -97,7 +143,7 @@ namespace CronTime
 				++szCronStr;
 			}
 			//月
-			_Parse(m_oMonth, szTemp1, szCronStr - szTemp1);
+			_Parse(m_oMonth, szTemp1, szCronStr - szTemp1, 1);
 			szTemp1 = ++szCronStr;
 
 			while (*szCronStr != ' ' && *szCronStr != '\0' && dwLen > 0)
@@ -134,8 +180,20 @@ namespace CronTime
 			}
 		}
 
+		bool GetValid()const { return m_bIsValid; }
+
+		bool Hit(const time_t& ttNow)const
+		{
+			struct tm sCurrent;
+			LOCALTIME(&ttNow, &sCurrent);
+			return m_oSecond.GetBit(sCurrent.tm_sec) && m_oMinute.GetBit(sCurrent.tm_hour)
+				&& m_oHour.GetBit(sCurrent.tm_hour) && m_oDom.GetBit(sCurrent.tm_mday - 1)
+				&& m_oMonth.GetBit(sCurrent.tm_mon) && m_oDow.GetBit(sCurrent.tm_wday);
+		}
+
 		void DumpInfo(std::ostream& refStream)
 		{
+			m_oSecond.DumpInfo(refStream);
 			m_oMinute.DumpInfo(refStream);
 			m_oHour.DumpInfo(refStream);
 			m_oDom.DumpInfo(refStream);
@@ -143,7 +201,8 @@ namespace CronTime
 			m_oDow.DumpInfo(refStream);
 		}
 	private:
-		void _Parse(BetSetInterface& refBitSet, const char* szCron, const unsigned int& dwLen)
+		void _Parse(BetSetInterface& refBitSet, const char* szCron, const unsigned int& dwLen,
+			const unsigned int& dwLow = 0)
 		{
 			//先查找'/'
 			bool bSplit1 = false;
@@ -168,6 +227,7 @@ namespace CronTime
 					m_bIsValid = false;
 					return;
 				}
+				dwNum2 -= dwLow;
 				assert(dwNum2 < refBitSet.GetCount());
 				if (dwNum2 >= refBitSet.GetCount())
 				{
@@ -198,12 +258,14 @@ namespace CronTime
 						m_bIsValid = false;
 						return;
 					}
+					dwNum_1 -= dwLow;
 					if (!_GetNumber(szTemp1, dwNum_2))
 					{
 						assert(0);
 						m_bIsValid = false;
 						return;
 					}
+					dwNum_2 -= dwLow;
 					assert(dwNum_1 < dwNum_2);
 					if (dwNum_2 >= dwNum_1)
 					{
@@ -231,6 +293,7 @@ namespace CronTime
 							m_bIsValid = false;
 							return;
 						}
+						dwNum_1 -= dwLow;
 						assert(dwNum_1 < refBitSet.GetCount());
 						if (dwNum_1 >= refBitSet.GetCount())
 						{
@@ -278,6 +341,7 @@ namespace CronTime
 							m_bIsValid = false;
 							return;
 						}
+						dwNum1 -= dwLow;
 						unsigned int dwNum2 = 0;
 						if (!_GetNumber(szTemp, dwNum2))
 						{
@@ -285,6 +349,7 @@ namespace CronTime
 							m_bIsValid = false;
 							return;
 						}
+						dwNum2 -= dwLow;
 						assert(dwNum1 < dwNum2);
 						if (dwNum1 >= dwNum2)
 						{
@@ -311,6 +376,7 @@ namespace CronTime
 							m_bIsValid = false;
 							return;
 						}
+						dwNum -= dwLow;
 						assert(dwNum < refBitSet.GetCount());
 						if (dwNum >= refBitSet.GetCount())
 						{
@@ -341,6 +407,7 @@ namespace CronTime
 			return m_oDow.GetBit(refTM.tm_mday - 1) || m_oDom.GetBit(refTM.tm_wday);
 		}
 
+		ESecondBitSet m_oSecond;
 		EMinuteBitSet m_oMinute;
 		EHourBitSet m_oHour;
 		EDomBitSet m_oDom;
