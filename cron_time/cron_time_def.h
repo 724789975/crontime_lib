@@ -103,6 +103,10 @@ namespace CronTime
 		{
 			m_bIsValid = true;
 			const char* szTemp1 = szCronStr;
+
+			//解析','
+			const char* _szTemp_1 = szTemp1;
+			bool bComma = false;
 			//
 			while (*szCronStr != ' ' && *szCronStr != '\0' && dwLen > 0)
 			{
@@ -110,8 +114,26 @@ namespace CronTime
 				--dwLen;
 			}
 			//秒
-			_Parse(m_oSecond, szTemp1, szCronStr - szTemp1);
+			for (const char*  i = szTemp1; i < szCronStr; ++i)
+			{
+				if (*i == ',')
+				{
+					_Parse(m_oSecond, _szTemp_1, i - _szTemp_1);
+					_szTemp_1 = ++i;
+					bComma = true;
+				}
+			}
+			if (bComma)
+			{
+				_Parse(m_oSecond, _szTemp_1, szCronStr - _szTemp_1);
+			}
+			else
+			{
+				_Parse(m_oSecond, szTemp1, szCronStr - szTemp1);
+			}
 			szTemp1 = ++szCronStr;
+			_szTemp_1 = szTemp1;
+			bComma = false;
 
 			while (*szCronStr != ' ' && *szCronStr != '\0' && dwLen > 0)
 			{
@@ -119,40 +141,137 @@ namespace CronTime
 				--dwLen;
 			}
 			//分
-			_Parse(m_oMinute, szTemp1, szCronStr - szTemp1);
+			for (const char* i = szTemp1; i < szCronStr; ++i)
+			{
+				if (*i == ',')
+				{
+					_Parse(m_oMinute, _szTemp_1, i - _szTemp_1);
+					_szTemp_1 = ++i;
+					bComma = true;
+				}
+			}
+			if (bComma)
+			{
+				_Parse(m_oMinute, _szTemp_1, szCronStr - _szTemp_1);
+			}
+			else
+			{
+				_Parse(m_oMinute, szTemp1, szCronStr - szTemp1);
+			}
 			szTemp1 = ++szCronStr;
+			_szTemp_1 = szTemp1;
+			bComma = false;
 
 			while (*szCronStr != ' ' && *szCronStr != '\0' && dwLen > 0)
 			{
 				++szCronStr;
+				--dwLen;
 			}
 			//时
-			_Parse(m_oHour, szTemp1, szCronStr - szTemp1);
+			for (const char* i = szTemp1; i < szCronStr; ++i)
+			{
+				if (*i == ',')
+				{
+					_Parse(m_oHour, _szTemp_1, i - _szTemp_1);
+					_szTemp_1 = ++i;
+					bComma = true;
+				}
+			}
+			if (bComma)
+			{
+				_Parse(m_oHour, _szTemp_1, szCronStr - _szTemp_1);
+			}
+			else
+			{
+				_Parse(m_oHour, szTemp1, szCronStr - szTemp1);
+			}
 			szTemp1 = ++szCronStr;
+			_szTemp_1 = szTemp1;
+			bComma = false;
 
 			while (*szCronStr != ' ' && *szCronStr != '\0' && dwLen > 0)
 			{
 				++szCronStr;
+				--dwLen;
 			}
 			//天 / 月
-			_Parse(m_oDom, szTemp1, szCronStr - szTemp1, 1);
+			for (const char* i = szTemp1; i < szCronStr; ++i)
+			{
+				if (*i == ',')
+				{
+					_Parse(m_oDom, _szTemp_1, i - _szTemp_1, 1);
+					_szTemp_1 = ++i;
+					bComma = true;
+				}
+			}
+			if (bComma)
+			{
+				_Parse(m_oDom, _szTemp_1, szCronStr - _szTemp_1, 1);
+			}
+			else
+			{
+				_Parse(m_oDom, szTemp1, szCronStr - szTemp1, 1);
+			}
 			szTemp1 = ++szCronStr;
+			_szTemp_1 = szTemp1;
+			bComma = false;
 
 			while (*szCronStr != ' ' && *szCronStr != '\0' && dwLen > 0)
 			{
 				++szCronStr;
+				--dwLen;
 			}
 			//月
-			_Parse(m_oMonth, szTemp1, szCronStr - szTemp1, 1);
+			for (const char* i = szTemp1; i < szCronStr; ++i)
+			{
+				if (*i == ',')
+				{
+					_Parse(m_oMonth, _szTemp_1, i - _szTemp_1, 1);
+					_szTemp_1 = ++i;
+					bComma = true;
+				}
+			}
+			if (bComma)
+			{
+				_Parse(m_oMonth, _szTemp_1, szCronStr - _szTemp_1, 1);
+			}
+			else
+			{
+				_Parse(m_oMonth, szTemp1, szCronStr - szTemp1, 1);
+			}
 			szTemp1 = ++szCronStr;
+			_szTemp_1 = szTemp1;
+			bComma = false;
 
+			assert(dwLen);
+			if (dwLen <= 0)
+			{
+				m_bIsValid = false;
+				return;
+			}
 			while (*szCronStr != ' ' && *szCronStr != '\0' && dwLen > 0)
 			{
 				++szCronStr;
+				--dwLen;
 			}
 			//天 / 周
-			_Parse(m_oDow, szTemp1, szCronStr - szTemp1);
-			szTemp1 = ++szCronStr;
+			for (const char* i = szTemp1; i < szCronStr; ++i)
+			{
+				if (*i == ',')
+				{
+					_Parse(m_oDow, _szTemp_1, i - _szTemp_1, 1);
+					_szTemp_1 = ++i;
+					bComma = true;
+				}
+			}
+			if (bComma)
+			{
+				_Parse(m_oDow, _szTemp_1, szCronStr - _szTemp_1);
+			}
+			else
+			{
+				_Parse(m_oDow, szTemp1, szCronStr - szTemp1);
+			}
 
 			if (m_bIsValid)
 			{
@@ -176,7 +295,7 @@ namespace CronTime
 						break;
 					}
 				}
-				m_bIsValid = bWValid && bMValid;
+				m_bIsValid = bWValid || bMValid;
 			}
 		}
 
@@ -189,6 +308,45 @@ namespace CronTime
 			return m_oSecond.GetBit(sCurrent.tm_sec) && m_oMinute.GetBit(sCurrent.tm_hour)
 				&& m_oHour.GetBit(sCurrent.tm_hour) && m_oDom.GetBit(sCurrent.tm_mday - 1)
 				&& m_oMonth.GetBit(sCurrent.tm_mon) && m_oDow.GetBit(sCurrent.tm_wday);
+		}
+
+		time_t GetNextMatch(time_t ttNow)const
+		{
+			//匹配秒
+			while (!m_oSecond.GetBit((++ttNow) % SECONDS_PER_MINUTE));
+			//匹配分
+			while (!m_oMinute.GetBit(((ttNow += SECONDS_PER_MINUTE)/ SECONDS_PER_MINUTE) % MINUTE_COUNT));
+
+			//有时区问题 所以要取下时间
+			struct tm sCurrent;
+			LOCALTIME(&ttNow, &sCurrent);
+			while (!m_oHour.GetBit(sCurrent.tm_hour))
+			{
+				ttNow += SECONDS_PER_HOUR;
+				LOCALTIME(&ttNow, &sCurrent);
+			}
+
+			while (!m_oDom.GetBit(sCurrent.tm_mday - 1))
+			{
+				ttNow += SECONDS_PER_HOUR * HOUR_COUNT;
+				LOCALTIME(&ttNow, &sCurrent);
+			}
+
+			while (!m_oDow.GetBit(sCurrent.tm_wday))
+			{
+				ttNow += SECONDS_PER_HOUR * HOUR_COUNT;
+				LOCALTIME(&ttNow, &sCurrent);
+			}
+
+			while (!m_oMonth.GetBit(sCurrent.tm_mon))
+			{
+				++sCurrent.tm_mon;
+				ttNow = mktime(&sCurrent);
+				LOCALTIME(&ttNow, &sCurrent);
+			}
+
+
+			return ttNow;
 		}
 
 		void DumpInfo(std::ostream& refStream)
@@ -267,7 +425,7 @@ namespace CronTime
 					}
 					dwNum_2 -= dwLow;
 					assert(dwNum_1 < dwNum_2);
-					if (dwNum_2 >= dwNum_1)
+					if (dwNum_2 <= dwNum_1)
 					{
 						m_bIsValid = false;
 						return;
