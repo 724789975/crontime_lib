@@ -16,11 +16,12 @@ int main()
 		std::cout << n << "\n";
 	}
 
-	sz = "3-5,7-20 1-9/3 * 4 5-8,9-11 *";
+	sz = "3-5 1-9/3 * 4 5-8,9-11 *";
 	CronTime::Timer t1(sz.c_str(), sz.size());
 	t1.DumpInfo(std::cout);
 
-	b = t1.Hit(time(0));
+	n = time(0);
+	b = t1.Hit(n);
 
 	for (size_t i = 0; i < 10; i++)
 	{
