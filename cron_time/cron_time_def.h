@@ -30,6 +30,8 @@
 0 20 0-23/2 * * *
 每月每天的午夜 0 点 20 分, 2 点 20 分, 4 点 20 分....执行
 
+0 0 0,13,18,21 * * *
+每天的0点、13点、18点、21点都执行一次
 ***********************************************************************/
 
 #define	SECONDS_PER_MINUTE	60
@@ -312,14 +314,25 @@ namespace CronTime
 
 		time_t GetNextMatch(time_t ttNow)const
 		{
-			//匹配秒
-			while (!m_oSecond.GetBit((++ttNow) % SECONDS_PER_MINUTE));
-			//匹配分
-			while (!m_oMinute.GetBit(((ttNow += SECONDS_PER_MINUTE)/ SECONDS_PER_MINUTE) % MINUTE_COUNT));
-
 			//有时区问题 所以要取下时间
 			struct tm sCurrent;
 			LOCALTIME(&ttNow, &sCurrent);
+			if (!(m_oDom.GetBit(sCurrent.tm_mday - 1) && m_oMonth.GetBit(sCurrent.tm_mon) && m_oDow.GetBit(sCurrent.tm_wday)))
+			{
+				//如果天数不匹配 就从第二天的0点开始
+				sCurrent.tm_sec = 0;
+				sCurrent.tm_min = 0;
+				sCurrent.tm_hour = 24;
+				ttNow = mktime(&sCurrent);
+			}
+			//匹配秒
+			while (!m_oSecond.GetBit((++ttNow) % SECONDS_PER_MINUTE));
+			//匹配分
+			while (!m_oMinute.GetBit((ttNow / SECONDS_PER_MINUTE) % MINUTE_COUNT))
+			{
+				ttNow += SECONDS_PER_MINUTE;
+			}
+
 			while (!m_oHour.GetBit(sCurrent.tm_hour))
 			{
 				ttNow += SECONDS_PER_HOUR;
