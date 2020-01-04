@@ -4,7 +4,7 @@
 #include <string.h>
 #include <iostream>
 
-class BetSetInterface
+class BitSetInterface
 {
 public:
 	virtual bool					SetBit(unsigned int e, bool bValue) = 0;
@@ -23,7 +23,7 @@ private:\
 	T##EnumName##BitSet();\
 };\
 template<>\
-class T##EnumName##BitSet<EnumName##Count> : public BetSetInterface \
+class T##EnumName##BitSet<EnumName##Count> : public BitSetInterface \
 {\
 public:\
 	T##EnumName##BitSet(){memset(m_pData, 0, sizeof(m_pData));}\

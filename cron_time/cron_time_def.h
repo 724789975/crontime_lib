@@ -372,7 +372,7 @@ namespace CronTime
 			m_oDow.DumpInfo(refStream);
 		}
 	private:
-		void _Parse(BetSetInterface& refBitSet, const char* szCron, const unsigned int& dwLen,
+		void _Parse(BitSetInterface& refBitSet, const char* szCron, const unsigned int& dwLen,
 			const unsigned int& dwLow = 0)
 		{
 			//œ»≤È’“'/'
