@@ -102,28 +102,24 @@ namespace CronTime
 	{
 	public:
 		CronTimeException(std::string szFile, int dwLine, std::string szFuncName)
-			: m_strFile(szFile)
-			, m_dwLine(dwLine)
-			, m_szFuncName(szFuncName)
 		{
 			std::stringstream strStream;
-			strStream << "CronTime Òì³£ : [" << m_strFile << ", " << m_dwLine << ", " << m_szFuncName << "]";
+			strStream << "CronTime Òì³£ : [" << szFile << ", " << dwLine << ", " << szFuncName << "]";
 			m_szError = strStream.str();
 		}
-		virtual char const* what() const
+
+		virtual ~CronTimeException() noexcept {}
+
+		virtual char const* what() const noexcept
 		{
 			return m_szError.c_str();
 		}
 
 	private:
-		int m_dwLine;
-		std::string m_strFile;
-		std::string m_szFuncName;
-
 		std::string m_szError;
 	};
 
-//#define CTException
+#define CTException
 #ifdef CTException
 #define ThrowCTException(szFile, dwLine, szFuncName) throw CronTimeException(szFile, dwLine, szFuncName)
 #else
