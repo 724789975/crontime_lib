@@ -6,7 +6,7 @@ int main()
 {
 	try
 	{
-		std::string sz = "0 0 * 2 ? *";
+		std::string sz = "0 0 * 2 * *";
 		CronTime::Timer t(sz.c_str(), sz.size());
 		t.DumpInfo(std::cout);
 
