@@ -1,0 +1,4 @@
+language: cpp
+solution: cron_time/cron_time.sln
+script:
+    xbuild /p:Configuration=Release cron_time/cron_time.sln

@@ -123,7 +123,7 @@ namespace CronTime
 		std::string m_szError;
 	};
 
-#define CTException
+//#define CTException
 #ifdef CTException
 #define ThrowCTException(szFile, dwLine, szFuncName) throw CronTimeException(szFile, dwLine, szFuncName)
 #else
