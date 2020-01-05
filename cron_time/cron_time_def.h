@@ -2,6 +2,7 @@
 #define __CRON_TIME_DEF_H__
 
 #include "meta_header/t_bit_set.h"
+#include <sstream>
 #include <stdexcept>
 #include <assert.h>
 #include <stdio.h>
@@ -53,9 +54,8 @@
 #define	LAST_MONTH	12
 #define	MONTH_COUNT	(LAST_MONTH - FIRST_MONTH + 1)
 
-/* note on DOW: 0 and 7 are both Sunday, for compatibility reasons. */
 #define	FIRST_DOW	0
-#define	LAST_DOW	7
+#define	LAST_DOW	6
 #define	DOW_COUNT	(LAST_DOW - FIRST_DOW + 1)
 
 #ifdef WIN32
@@ -97,6 +97,39 @@ namespace CronTime
 		EndEnumBitSetWithCount(EDow, DOW_COUNT)
 	};
 	EnumBitSet(EDow);
+
+	class CronTimeException : public std::exception
+	{
+	public:
+		CronTimeException(std::string szFile, int dwLine, std::string szFuncName)
+			: m_strFile(szFile)
+			, m_dwLine(dwLine)
+			, m_szFuncName(szFuncName)
+		{
+			std::stringstream strStream;
+			strStream << "CronTime 异常 : [" << m_strFile << ", " << m_dwLine << ", " << m_szFuncName << "]";
+			m_szError = strStream.str();
+		}
+		virtual char const* what() const
+		{
+			return m_szError.c_str();
+		}
+
+	private:
+		int m_dwLine;
+		std::string m_strFile;
+		std::string m_szFuncName;
+
+		std::string m_szError;
+	};
+
+#define CTException
+#ifdef CTException
+#define ThrowCTException(szFile, dwLine, szFuncName) throw CronTimeException(szFile, dwLine, szFuncName)
+#else
+#define ThrowCTException(szFile, dwLine, szFuncName)
+#endif // CTException
+
 
 	class Timer
 	{
@@ -245,10 +278,10 @@ namespace CronTime
 			_szTemp_1 = szTemp1;
 			bComma = false;
 
-			assert(dwLen);
 			if (dwLen <= 0)
 			{
 				m_bIsValid = false;
+				ThrowCTException(__FILE__, __LINE__, __FUNCTION__);
 				return;
 			}
 			while (*szCronStr != ' ' && *szCronStr != '\0' && dwLen > 0)
@@ -298,6 +331,10 @@ namespace CronTime
 					}
 				}
 				m_bIsValid = bWValid || bMValid;
+				if (!m_bIsValid)
+				{
+					ThrowCTException(__FILE__, __LINE__, __FUNCTION__);
+				}
 			}
 		}
 
@@ -394,15 +431,15 @@ namespace CronTime
 				unsigned int dwNum2 = 0;
 				if (!_GetNumber(szTemp, dwNum2))
 				{
-					assert(0);
 					m_bIsValid = false;
+					ThrowCTException(__FILE__, __LINE__, __FUNCTION__);
 					return;
 				}
 				dwNum2 -= dwLow;
-				assert(dwNum2 < refBitSet.GetCount());
 				if (dwNum2 >= refBitSet.GetCount())
 				{
 					m_bIsValid = false;
+					ThrowCTException(__FILE__, __LINE__, __FUNCTION__);
 					return;
 				}
 
@@ -425,28 +462,28 @@ namespace CronTime
 					//如果有分割 那么就是时间段 内 每隔多长时间 (1-23/3 * * * *)
 					if (!_GetNumber(szCron, dwNum_1))
 					{
-						assert(0);
 						m_bIsValid = false;
+						ThrowCTException(__FILE__, __LINE__, __FUNCTION__);
 						return;
 					}
 					dwNum_1 -= dwLow;
 					if (!_GetNumber(szTemp1, dwNum_2))
 					{
-						assert(0);
 						m_bIsValid = false;
+						ThrowCTException(__FILE__, __LINE__, __FUNCTION__);
 						return;
 					}
 					dwNum_2 -= dwLow;
-					assert(dwNum_1 < dwNum_2);
 					if (dwNum_2 <= dwNum_1)
 					{
 						m_bIsValid = false;
+						ThrowCTException(__FILE__, __LINE__, __FUNCTION__);
 						return;
 					}
-					assert(dwNum_2 < refBitSet.GetCount());
 					if (dwNum_2 >= refBitSet.GetCount())
 					{
 						m_bIsValid = false;
+						ThrowCTException(__FILE__, __LINE__, __FUNCTION__);
 						return;
 					}
 				}
@@ -460,15 +497,15 @@ namespace CronTime
 					{
 						if (!_GetNumber(szCron, dwNum_1))
 						{
-							assert(0);
 							m_bIsValid = false;
+							ThrowCTException(__FILE__, __LINE__, __FUNCTION__);
 							return;
 						}
 						dwNum_1 -= dwLow;
-						assert(dwNum_1 < refBitSet.GetCount());
 						if (dwNum_1 >= refBitSet.GetCount())
 						{
 							m_bIsValid = false;
+							ThrowCTException(__FILE__, __LINE__, __FUNCTION__);
 							return;
 						}
 					}
@@ -508,29 +545,29 @@ namespace CronTime
 						unsigned int dwNum1 = 0;
 						if (!_GetNumber(szCron, dwNum1))
 						{
-							assert(0);
 							m_bIsValid = false;
+							ThrowCTException(__FILE__, __LINE__, __FUNCTION__);
 							return;
 						}
 						dwNum1 -= dwLow;
 						unsigned int dwNum2 = 0;
 						if (!_GetNumber(szTemp, dwNum2))
 						{
-							assert(0);
 							m_bIsValid = false;
+							ThrowCTException(__FILE__, __LINE__, __FUNCTION__);
 							return;
 						}
 						dwNum2 -= dwLow;
-						assert(dwNum1 < dwNum2);
 						if (dwNum1 >= dwNum2)
 						{
 							m_bIsValid = false;
+							ThrowCTException(__FILE__, __LINE__, __FUNCTION__);
 							return;
 						}
-						assert(dwNum2 < refBitSet.GetCount());
 						if (dwNum2 >= refBitSet.GetCount())
 						{
 							m_bIsValid = false;
+							ThrowCTException(__FILE__, __LINE__, __FUNCTION__);
 							return;
 						}
 						for (unsigned int i = dwNum1; i <= dwNum2; ++i)
@@ -543,15 +580,15 @@ namespace CronTime
 						unsigned int dwNum = 0;
 						if (!_GetNumber(szCron, dwNum))
 						{
-							assert(0);
 							m_bIsValid = false;
+							ThrowCTException(__FILE__, __LINE__, __FUNCTION__);
 							return;
 						}
 						dwNum -= dwLow;
-						assert(dwNum < refBitSet.GetCount());
 						if (dwNum >= refBitSet.GetCount())
 						{
 							m_bIsValid = false;
+							ThrowCTException(__FILE__, __LINE__, __FUNCTION__);
 							return;
 						}
 						refBitSet.SetBit(dwNum, true);
