@@ -58,11 +58,11 @@
 #define	LAST_DOW	6
 #define	DOW_COUNT	(LAST_DOW - FIRST_DOW + 1)
 
-#ifdef WIN32
+#ifdef _WIN32
 #define LOCALTIME(p_tt, p_tm) localtime_s(p_tm, p_tt)
 #else
 #define LOCALTIME(p_tt, p_tm) localtime_r(p_tt, p_tm)
-#endif // WIN32
+#endif // _<F15>WIN32
 
 
 namespace CronTime
