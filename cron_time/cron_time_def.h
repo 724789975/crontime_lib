@@ -62,7 +62,7 @@
 #define LOCALTIME(p_tt, p_tm) localtime_s(p_tm, p_tt)
 #else
 #define LOCALTIME(p_tt, p_tm) localtime_r(p_tt, p_tm)
-#endif // _<F15>WIN32
+#endif // _WIN32
 
 
 namespace CronTime
